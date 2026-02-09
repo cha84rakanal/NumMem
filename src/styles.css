@@ -42,7 +42,7 @@ body {
 
 .content {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
+  grid-template-columns: minmax(0, 1fr) 220px;
   gap: 32px;
   align-items: start;
 }
@@ -84,42 +84,43 @@ body {
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.9);
   box-shadow: 0 18px 40px rgba(31, 79, 82, 0.12);
-  width: min(560px, 95vw);
+  width: min(720px, 95vw);
   display: flex;
   flex-direction: column;
   gap: 12px;
   animation: floatIn 0.8s ease-out;
 }
 
-.byte-stack {
+.row-stack {
   display: grid;
   gap: 12px;
 }
 
-.byte-row {
+.byte-line {
   display: grid;
-  grid-template-columns: 64px 1fr;
+  grid-template-columns: 120px minmax(0, 1fr) minmax(140px, 190px);
+  gap: 12px;
   align-items: center;
-  gap: 12px;
 }
 
-.byte-label {
+.row-label {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: rgba(29, 27, 22, 0.55);
+  padding-top: 6px;
 }
 
-.bit-grid {
+.byte-row-horizontal {
   display: grid;
   grid-template-columns: repeat(8, minmax(0, 1fr));
-  gap: 10px;
+  gap: 2px;
 }
 
 .bit-cell {
   height: 64px;
   display: grid;
   place-items: center;
-  border-radius: 14px;
+  border-radius: 6px;
   font-weight: 600;
   background: #efe9de;
   color: #5b5143;
@@ -130,7 +131,6 @@ body {
 .bit-cell.on {
   background: #1f4f52;
   color: #f9f4ec;
-  transform: translateY(-2px);
 }
 
 .bit-cell.off {
@@ -141,6 +141,32 @@ body {
   color: rgba(29, 27, 22, 0.6);
 }
 
+.row-conversions {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(246, 243, 238, 0.9);
+}
+
+.row-conversion {
+  display: grid;
+  gap: 2px;
+}
+
+.row-conversions.compact {
+  padding: 6px 10px;
+  gap: 1.5px;
+}
+
+.row-conversions.compact .MuiTypography-overline {
+  font-size: 0.5rem;
+}
+
+.row-conversions.compact .MuiTypography-caption {
+  font-size: 0.6rem;
+}
+
 .side-panel {
   padding: 20px;
   border-radius: 20px;
@@ -149,7 +175,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  min-width: 240px;
+  min-width: 200px;
 }
 
 .conversion-card {
@@ -199,7 +225,7 @@ body {
     align-items: stretch;
   }
 
-  .byte-row {
+  .byte-line {
     grid-template-columns: 1fr;
   }
 }

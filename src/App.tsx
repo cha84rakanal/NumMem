@@ -155,6 +155,10 @@ export default function App() {
   const asciiLabel = orderedBytes
     .map((byte) => toPrintableAscii(byte))
     .join(" ");
+  const rows = useMemo(() => {
+    if (orderedBytes.length === 0) return [null];
+    return orderedBytes.map((byte) => byte);
+  }, [orderedBytes]);
 
   return (
     <ThemeProvider theme={theme}>
@@ -238,80 +242,59 @@ export default function App() {
 
             <Box className="memory-panel">
               <Typography variant="h6">Memory ({bitWidth}-bit)</Typography>
-              <Box className="byte-stack">
-                {orderedBytes.length === 0
-                  ? [0].map((row) => (
-                      <Box key={`empty-${row}`} className="byte-row">
-                        <Typography variant="caption" className="byte-label">
-                          Byte {row}
-                        </Typography>
-                        <Box className="bit-grid">
-                          {Array.from({ length: bitsPerRow }, (_, index) => (
-                            <Box key={`empty-bit-${index}`} className="bit-cell off">
-                              <Typography variant="h6">-</Typography>
-                            </Box>
-                          ))}
+              <Box className="row-stack">
+                {rows.map((rowByte, rowIndex) => {
+                  const byte = rowByte;
+                  const bits = byte === null ? Array.from({ length: bitsPerRow }, () => "-") : toBits(byte, bitsPerRow);
+                  const hex = byte === null ? "--" : byte.toString(16).toUpperCase().padStart(2, "0");
+                  const bin = byte === null ? "--------" : byte.toString(2).padStart(8, "0");
+                  const ascii = byte === null ? "·" : toPrintableAscii(byte);
+                  const dec = byte === null ? "-" : String(byte);
+                  return (
+                    <Box key={`row-${rowIndex}`} className="byte-line">
+                      <Typography variant="caption" className="row-label">
+                        8bitの{String(rowIndex + 1).padStart(2, "0")}
+                      </Typography>
+                      <Box className="byte-row-horizontal">
+                        {bits.map((bit, bitIndex) => (
+                          <Box
+                            key={`cell-${rowIndex}-${bitIndex}`}
+                            className={`bit-cell ${bit === "1" ? "on" : "off"}`}
+                          >
+                            <Typography variant="caption">{bit}</Typography>
+                          </Box>
+                        ))}
+                      </Box>
+                      <Box className="row-conversions compact">
+                        <Box className="row-conversion">
+                          <Typography variant="caption" className="mono">
+                            Hex: {hex}
+                          </Typography>
+                        </Box>
+                        <Box className="row-conversion">
+                          <Typography variant="caption" className="mono">
+                            Dec: {dec}
+                          </Typography>
+                        </Box>
+                        <Box className="row-conversion">
+                          <Typography variant="caption" className="mono">
+                            Bin: {bin}
+                          </Typography>
+                        </Box>
+                        <Box className="row-conversion">
+                          <Typography variant="caption" className="mono">
+                            ASCII: {ascii}
+                          </Typography>
                         </Box>
                       </Box>
-                    ))
-                  : orderedBytes.map((byte, rowIndex) => (
-                      <Box key={`byte-${rowIndex}`} className="byte-row">
-                        <Typography variant="caption" className="byte-label">
-                          Byte {rowIndex}
-                        </Typography>
-                        <Box className="bit-grid">
-                          {toBits(byte, bitsPerRow).map((bit, bitIndex) => (
-                            <Box key={`${rowIndex}-${bitIndex}`} className={`bit-cell ${bit === "1" ? "on" : "off"}`}>
-                              <Typography variant="h6">{bit}</Typography>
-                            </Box>
-                          ))}
-                        </Box>
-                      </Box>
-                    ))}
+                    </Box>
+                  );
+                })}
               </Box>
               <Typography variant="caption" className="bit-caption">
                 Byte order: {endian} Endian | Bits: MSB → LSB
               </Typography>
             </Box>
-          </Box>
-
-          <Box className="side-panel">
-            <Typography variant="h6">Conversions</Typography>
-            <Box className="conversion-card">
-              <Typography variant="overline">Base 2</Typography>
-              <Typography variant="body1" className="mono">
-                {normalized !== null ? normalized.toString(2).padStart(base2Pad, "0") : "-"}
-              </Typography>
-            </Box>
-            <Box className="conversion-card">
-              <Typography variant="overline">Base 8</Typography>
-              <Typography variant="body1" className="mono">
-                {normalized !== null ? normalized.toString(8).padStart(base8Pad, "0") : "-"}
-              </Typography>
-            </Box>
-            <Box className="conversion-card">
-              <Typography variant="overline">Base 10</Typography>
-              <Typography variant="body1" className="mono">
-                {normalized !== null ? normalized.toString(10) : "-"}
-              </Typography>
-            </Box>
-            <Box className="conversion-card">
-              <Typography variant="overline">Base 16</Typography>
-              <Typography variant="body1" className="mono">
-                {normalized !== null
-                  ? `0x${normalized.toString(16).toUpperCase().padStart(base16Pad, "0")}`
-                  : "-"}
-              </Typography>
-            </Box>
-            <Box className="conversion-card">
-              <Typography variant="overline">ASCII</Typography>
-              <Typography variant="body1" className="mono">
-                {normalized !== null ? asciiLabel : "-"}
-              </Typography>
-            </Box>
-            <Typography variant="caption" className="note">
-              Value is normalized to unsigned width for the memory grid and conversions.
-            </Typography>
           </Box>
         </Box>
       </Box>
