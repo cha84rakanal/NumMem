@@ -194,6 +194,25 @@ body {
   color: rgba(29, 27, 22, 0.6);
 }
 
+.ieee-panel {
+  margin-top: 16px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 12px 28px rgba(31, 79, 82, 0.08);
+  display: grid;
+  gap: 10px;
+  width: min(900px, 95vw);
+}
+
+.ieee-card {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(246, 243, 238, 0.9);
+  display: grid;
+  gap: 6px;
+}
+
 @keyframes floatIn {
   from {
     transform: translateY(12px);

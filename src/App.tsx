@@ -104,6 +104,50 @@ function parseLiteral(inputRaw: string, lang: Lang): { value: bigint; base: numb
   return null;
 }
 
+type FloatParse = { value: number; kind: "float32" | "float64" };
+
+function detectFloat(inputRaw: string): FloatParse | null {
+  const trimmed = inputRaw.trim();
+  if (!trimmed) return null;
+  const lower = trimmed.toLowerCase();
+  const hasFloatSuffix = lower.endsWith("f");
+  const core = hasFloatSuffix ? trimmed.slice(0, -1) : trimmed;
+  if (!core) return null;
+  const isFloatLike = core.includes(".") || core.includes("e") || core.includes("E");
+  if (!isFloatLike && !hasFloatSuffix) return null;
+  const num = Number(core);
+  if (Number.isNaN(num)) return null;
+  return {
+    value: hasFloatSuffix ? Math.fround(num) : num,
+    kind: hasFloatSuffix ? "float32" : "float64",
+  };
+}
+
+function float32Bits(value: number): { bits: string; sign: number; exponent: number; fraction: number } {
+  const buffer = new ArrayBuffer(4);
+  const view = new DataView(buffer);
+  view.setFloat32(0, value, false);
+  const uint = view.getUint32(0, false);
+  const sign = (uint >>> 31) & 1;
+  const exponent = (uint >>> 23) & 0xff;
+  const fraction = uint & 0x7fffff;
+  const bits = uint.toString(2).padStart(32, "0");
+  return { bits, sign, exponent, fraction };
+}
+
+function float64Bits(value: number): { bits: string; sign: number; exponent: number; fraction: bigint } {
+  const buffer = new ArrayBuffer(8);
+  const view = new DataView(buffer);
+  view.setFloat64(0, value, false);
+  const high = view.getUint32(0, false);
+  const low = view.getUint32(4, false);
+  const sign = (high >>> 31) & 1;
+  const exponent = (high >>> 20) & 0x7ff;
+  const fractionHigh = high & 0xfffff;
+  const fraction = (BigInt(fractionHigh) << 32n) | BigInt(low);
+  const bits = high.toString(2).padStart(32, "0") + low.toString(2).padStart(32, "0");
+  return { bits, sign, exponent, fraction };
+}
 function toUintN(value: bigint, width: number): bigint {
   const mod = 1n << BigInt(width);
   let normalized = value % mod;
@@ -131,9 +175,26 @@ export default function App() {
   const [bitWidth, setBitWidth] = useState<(typeof BIT_WIDTHS)[number]>(8);
 
   const parsed = useMemo(() => parseLiteral(input, lang), [input, lang]);
-  const normalized = parsed ? toUintN(parsed.value, bitWidth) : null;
-  const byteCount = bitWidth / 8;
+  const parsedFloat = useMemo(() => detectFloat(input), [input]);
+  const floatInfo = useMemo(() => {
+    if (!parsedFloat) return null;
+    if (parsedFloat.kind === "float32") return { kind: "float32" as const, ...float32Bits(parsedFloat.value) };
+    return { kind: "float64" as const, ...float64Bits(parsedFloat.value) };
+  }, [parsedFloat]);
+
+  const effectiveBitWidth = floatInfo ? (floatInfo.kind === "float32" ? 32 : 64) : bitWidth;
+  const normalized = parsed ? toUintN(parsed.value, effectiveBitWidth) : null;
+  const byteCount = effectiveBitWidth / 8;
   const bytes = useMemo(() => {
+    if (floatInfo) {
+      const bits = floatInfo.bits;
+      const list: number[] = [];
+      for (let i = 0; i < bits.length; i += 8) {
+        const chunk = bits.slice(i, i + 8);
+        list.push(parseInt(chunk, 2));
+      }
+      return list;
+    }
     if (normalized === null) return [] as number[];
     const list: number[] = [];
     for (let i = 0; i < byteCount; i += 1) {
@@ -142,19 +203,14 @@ export default function App() {
       list.push(byte);
     }
     return list;
-  }, [normalized, byteCount]);
+  }, [floatInfo, normalized, byteCount]);
 
   const endian = ARCHS.find((a) => a.id === arch)?.endian ?? "Little";
   const orderedBytes = endian === "Little" ? bytes : [...bytes].reverse();
 
   const archLabel = ARCHS.find((a) => a.id === arch)?.label ?? arch;
   const bitsPerRow = 8;
-  const base2Pad = bitWidth;
-  const base8Pad = Math.ceil(bitWidth / 3);
-  const base16Pad = Math.ceil(bitWidth / 4);
-  const asciiLabel = orderedBytes
-    .map((byte) => toPrintableAscii(byte))
-    .join(" ");
+  // numeric base outputs are currently displayed per-byte; keep these when global conversion panel returns
   const rows = useMemo(() => {
     if (orderedBytes.length === 0) return [null];
     return orderedBytes.map((byte) => byte);
@@ -241,7 +297,7 @@ export default function App() {
             </Stack>
 
             <Box className="memory-panel">
-              <Typography variant="h6">Memory ({bitWidth}-bit)</Typography>
+              <Typography variant="h6">Memory ({effectiveBitWidth}-bit)</Typography>
               <Box className="row-stack">
                 {rows.map((rowByte, rowIndex) => {
                   const byte = rowByte;
@@ -294,6 +350,25 @@ export default function App() {
               <Typography variant="caption" className="bit-caption">
                 Byte order: {endian} Endian | Bits: MSB → LSB
               </Typography>
+            </Box>
+            <Box className="ieee-panel">
+              <Typography variant="h6">IEEE754</Typography>
+              <Typography variant="caption" className="note">
+                入力が `.` / `e` / `f` を含むと浮動小数として推論されます
+              </Typography>
+              <Box className="ieee-card">
+                <Typography variant="caption" className="mono">
+                  {floatInfo ? `${floatInfo.kind} = ${parsedFloat?.value}` : "-"}
+                </Typography>
+                <Typography variant="caption" className="mono">
+                  {floatInfo ? floatInfo.bits : "-"}
+                </Typography>
+                {floatInfo && (
+                  <Typography variant="caption" className="mono">
+                    sign: {floatInfo.sign} exp: {floatInfo.exponent} frac: {floatInfo.fraction.toString()}
+                  </Typography>
+                )}
+              </Box>
             </Box>
           </Box>
         </Box>
