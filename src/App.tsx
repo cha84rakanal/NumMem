@@ -189,8 +189,9 @@ export default function App() {
     if (floatInfo) {
       const bits = floatInfo.bits;
       const list: number[] = [];
-      for (let i = 0; i < bits.length; i += 8) {
-        const chunk = bits.slice(i, i + 8);
+      // Build bytes in little-endian order to match integer path (LSB-first).
+      for (let i = bits.length; i > 0; i -= 8) {
+        const chunk = bits.slice(i - 8, i);
         list.push(parseInt(chunk, 2));
       }
       return list;
