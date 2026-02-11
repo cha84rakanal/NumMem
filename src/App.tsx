@@ -16,15 +16,15 @@ import {
 
 const theme = createTheme({
   palette: {
-    mode: "light",
+    mode: "dark",
     background: {
-      default: "#f6f3ee",
+      default: "#0d1117",
     },
     primary: {
-      main: "#1f4f52",
+      main: "#58a6ff",
     },
     secondary: {
-      main: "#c46b28",
+      main: "#f778ba",
     },
   },
   typography: {

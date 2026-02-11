@@ -1,7 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap");
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 * {
@@ -10,17 +10,17 @@
 
 body {
   margin: 0;
-  background: #f6f3ee;
-  color: #1d1b16;
+  background: #0d1117;
+  color: #c9d1d9;
 }
 
 .app-shell {
   min-height: 100vh;
   padding: 32px 48px 56px;
   background:
-    radial-gradient(1200px 600px at 20% -10%, rgba(195, 175, 136, 0.35), transparent 65%),
-    radial-gradient(900px 500px at 90% 0%, rgba(31, 79, 82, 0.2), transparent 70%),
-    linear-gradient(180deg, rgba(246, 243, 238, 0.9), rgba(246, 243, 238, 1));
+    radial-gradient(900px 480px at 15% -10%, rgba(88, 166, 255, 0.18), transparent 65%),
+    radial-gradient(700px 420px at 90% 0%, rgba(247, 120, 186, 0.12), transparent 70%),
+    linear-gradient(180deg, rgba(13, 17, 23, 0.96), rgba(13, 17, 23, 1));
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -36,7 +36,7 @@ body {
 .select-control {
   min-width: 160px;
   backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(22, 27, 34, 0.85);
   border-radius: 14px;
 }
 
@@ -59,7 +59,7 @@ body {
 }
 
 .subtitle {
-  color: rgba(29, 27, 22, 0.7);
+  color: rgba(201, 209, 217, 0.7);
 }
 
 .input-field {
@@ -69,7 +69,7 @@ body {
 .input-field .MuiInputBase-root {
   font-size: 1.4rem;
   padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(22, 27, 34, 0.9);
   border-radius: 18px;
 }
 
@@ -82,8 +82,8 @@ body {
   margin-top: 16px;
   padding: 20px 24px;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 18px 40px rgba(31, 79, 82, 0.12);
+  background: rgba(22, 27, 34, 0.9);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
   width: min(720px, 95vw);
   display: flex;
   flex-direction: column;
@@ -106,7 +106,7 @@ body {
 .row-label {
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: rgba(29, 27, 22, 0.55);
+  color: rgba(139, 148, 158, 0.8);
   padding-top: 6px;
 }
 
@@ -122,15 +122,15 @@ body {
   place-items: center;
   border-radius: 6px;
   font-weight: 600;
-  background: #efe9de;
-  color: #5b5143;
-  border: 1px solid rgba(31, 79, 82, 0.18);
+  background: #0f172a;
+  color: #8b949e;
+  border: 1px solid rgba(88, 166, 255, 0.25);
   transition: transform 0.2s ease, background 0.2s ease;
 }
 
 .bit-cell.on {
-  background: #1f4f52;
-  color: #f9f4ec;
+  background: #58a6ff;
+  color: #0d1117;
 }
 
 .bit-cell.off {
@@ -138,7 +138,7 @@ body {
 }
 
 .bit-caption {
-  color: rgba(29, 27, 22, 0.6);
+  color: rgba(139, 148, 158, 0.7);
 }
 
 .row-conversions {
@@ -146,7 +146,7 @@ body {
   gap: 8px;
   padding: 10px 12px;
   border-radius: 10px;
-  background: rgba(246, 243, 238, 0.9);
+  background: rgba(13, 17, 23, 0.9);
 }
 
 .row-conversion {
@@ -170,8 +170,8 @@ body {
 .side-panel {
   padding: 20px;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 18px 40px rgba(31, 79, 82, 0.08);
+  background: rgba(22, 27, 34, 0.9);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -181,7 +181,7 @@ body {
 .conversion-card {
   padding: 10px 12px;
   border-radius: 14px;
-  background: rgba(246, 243, 238, 0.9);
+  background: rgba(13, 17, 23, 0.9);
   display: grid;
   gap: 4px;
 }
@@ -191,15 +191,15 @@ body {
 }
 
 .note {
-  color: rgba(29, 27, 22, 0.6);
+  color: rgba(139, 148, 158, 0.7);
 }
 
 .ieee-panel {
   margin-top: 16px;
   padding: 16px 18px;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 12px 28px rgba(31, 79, 82, 0.08);
+  background: rgba(22, 27, 34, 0.9);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
   display: grid;
   gap: 10px;
   width: min(900px, 95vw);
@@ -208,7 +208,7 @@ body {
 .ieee-card {
   padding: 10px 12px;
   border-radius: 12px;
-  background: rgba(246, 243, 238, 0.9);
+  background: rgba(13, 17, 23, 0.9);
   display: grid;
   gap: 6px;
 }
