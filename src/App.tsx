@@ -191,6 +191,7 @@ export default function App() {
   const [lang, setLang] = useState<Lang>("c");
   const [input, setInput] = useState("42");
   const [bitWidth, setBitWidth] = useState<(typeof BIT_WIDTHS)[number]>(8);
+  const [baseAddrInput, setBaseAddrInput] = useState("0x00");
 
   const parsed = useMemo(() => parseLiteral(input, lang), [input, lang]);
   const parsedFloat = useMemo(() => detectFloat(input), [input]);
@@ -245,6 +246,18 @@ export default function App() {
   const archLabel = ARCHS.find((a) => a.id === arch)?.label ?? arch;
   const bitsPerRow = 8;
   const addressHexWidth = Math.max(2, Math.ceil(effectiveBitWidth / 4));
+  const baseAddress = useMemo(() => {
+    const raw = baseAddrInput.trim();
+    if (!raw) return 0n;
+    const normalizedRaw = raw.toLowerCase();
+    try {
+      if (normalizedRaw.startsWith("0x")) return BigInt(normalizedRaw);
+      if (/^[0-9]+$/.test(normalizedRaw)) return BigInt(normalizedRaw);
+    } catch {
+      return 0n;
+    }
+    return 0n;
+  }, [baseAddrInput]);
   // numeric base outputs are currently displayed per-byte; keep these when global conversion panel returns
   const rows = useMemo(() => {
     if (orderedBytes.length === 0) return [null];
@@ -301,6 +314,14 @@ export default function App() {
               ))}
             </Select>
           </FormControl>
+          <TextField
+            size="small"
+            value={baseAddrInput}
+            onChange={(e) => setBaseAddrInput(e.target.value)}
+            label="Base Address"
+            placeholder="0x00"
+            className="select-control"
+          />
         </Box>
 
         <Box className="content">
@@ -344,7 +365,10 @@ export default function App() {
                   return (
                     <Box key={`row-${rowIndex}`} className="byte-line">
                       <Typography variant="caption" className="row-label">
-                        {`0x${rowIndex.toString(16).toUpperCase().padStart(addressHexWidth, "0")}`}
+                        {`0x${(baseAddress + BigInt(rowIndex))
+                          .toString(16)
+                          .toUpperCase()
+                          .padStart(addressHexWidth, "0")}`}
                       </Typography>
                       <Box className="byte-row-horizontal">
                         {bits.map((bit, bitIndex) => (
