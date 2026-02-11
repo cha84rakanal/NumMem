@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Chip,
@@ -49,7 +49,7 @@ const LANGS: { id: Lang; label: string }[] = [
   { id: "javascript", label: "JavaScript" },
 ];
 
-const BIT_WIDTHS = [8, 16, 32, 64] as const;
+const BIT_WIDTHS = [8, 16, 32, 64, 128] as const;
 
 function parseLiteral(inputRaw: string, lang: Lang): { value: bigint; base: number } | null {
   const input = inputRaw.trim();
@@ -191,6 +191,21 @@ export default function App() {
     if (parsedFloat.kind === "float32") return { kind: "float32" as const, ...float32Bits(parsedFloat.value) };
     return { kind: "float64" as const, ...float64Bits(parsedFloat.value) };
   }, [parsedFloat]);
+
+  const maxWidth = BIT_WIDTHS[BIT_WIDTHS.length - 1];
+  const fitsUnsigned = (value: bigint, width: number) => {
+    if (value < 0n) return false;
+    return value < (1n << BigInt(width));
+  };
+
+  useEffect(() => {
+    if (!parsed || floatInfo) return;
+    if (fitsUnsigned(parsed.value, bitWidth)) return;
+    const next = BIT_WIDTHS.find((width) => width > bitWidth) ?? bitWidth;
+    if (next !== bitWidth && bitWidth < maxWidth) {
+      setBitWidth(next);
+    }
+  }, [parsed, floatInfo, bitWidth, maxWidth]);
 
   const effectiveBitWidth = floatInfo ? (floatInfo.kind === "float32" ? 32 : 64) : bitWidth;
   const normalized = parsed ? toUintN(parsed.value, effectiveBitWidth) : null;
