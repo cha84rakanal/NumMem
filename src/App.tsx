@@ -110,6 +110,10 @@ function detectFloat(inputRaw: string): FloatParse | null {
   const trimmed = inputRaw.trim();
   if (!trimmed) return null;
   const lower = trimmed.toLowerCase();
+  const prefixCheck = lower.replace(/^[-+]/, "");
+  if (prefixCheck.startsWith("0x") || prefixCheck.startsWith("0b") || prefixCheck.startsWith("0o")) {
+    return null;
+  }
   const hasFloatSuffix = lower.endsWith("f");
   const core = hasFloatSuffix ? trimmed.slice(0, -1) : trimmed;
   if (!core) return null;
