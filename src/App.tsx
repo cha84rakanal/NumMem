@@ -39,6 +39,10 @@ const ARCHS = [
   { id: "x86-64", label: "x86-64", endian: "Little" },
   { id: "arm64", label: "Arm64", endian: "Little" },
   { id: "arm32", label: "Arm32", endian: "Little" },
+  { id: "riscv", label: "RISC-V", endian: "Little" },
+  { id: "mips", label: "MIPS", endian: "Big" },
+  { id: "powerpc", label: "PowerPC", endian: "Big" },
+  { id: "generic-be", label: "Generic (Big Endian)", endian: "Big" },
 ];
 
 type Lang = "c" | "python" | "javascript";
