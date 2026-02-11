@@ -123,7 +123,7 @@ function detectFloat(inputRaw: string): FloatParse | null {
   };
 }
 
-function float32Bits(value: number): { bits: string; sign: number; exponent: number; fraction: number } {
+function float32Bits(value: number): { bits: string; sign: number; exponent: number; fraction: number; fractionBits: string } {
   const buffer = new ArrayBuffer(4);
   const view = new DataView(buffer);
   view.setFloat32(0, value, false);
@@ -132,10 +132,11 @@ function float32Bits(value: number): { bits: string; sign: number; exponent: num
   const exponent = (uint >>> 23) & 0xff;
   const fraction = uint & 0x7fffff;
   const bits = uint.toString(2).padStart(32, "0");
-  return { bits, sign, exponent, fraction };
+  const fractionBits = bits.slice(9);
+  return { bits, sign, exponent, fraction, fractionBits };
 }
 
-function float64Bits(value: number): { bits: string; sign: number; exponent: number; fraction: bigint } {
+function float64Bits(value: number): { bits: string; sign: number; exponent: number; fraction: bigint; fractionBits: string } {
   const buffer = new ArrayBuffer(8);
   const view = new DataView(buffer);
   view.setFloat64(0, value, false);
@@ -146,7 +147,16 @@ function float64Bits(value: number): { bits: string; sign: number; exponent: num
   const fractionHigh = high & 0xfffff;
   const fraction = (BigInt(fractionHigh) << 32n) | BigInt(low);
   const bits = high.toString(2).padStart(32, "0") + low.toString(2).padStart(32, "0");
-  return { bits, sign, exponent, fraction };
+  const fractionBits = bits.slice(12);
+  return { bits, sign, exponent, fraction, fractionBits };
+}
+
+function fractionBitsToDecimal(bits: string): number {
+  let sum = 0;
+  for (let i = 0; i < bits.length; i += 1) {
+    if (bits[i] === "1") sum += Math.pow(2, -(i + 1));
+  }
+  return sum;
 }
 function toUintN(value: bigint, width: number): bigint {
   const mod = 1n << BigInt(width);
@@ -367,6 +377,18 @@ export default function App() {
                 {floatInfo && (
                   <Typography variant="caption" className="mono">
                     sign: {floatInfo.sign} exp: {floatInfo.exponent} frac: {floatInfo.fraction.toString()}
+                  </Typography>
+                )}
+                {floatInfo && (
+                  <Typography variant="caption" className="mono">
+                    frac(2^-n): {fractionBitsToDecimal(floatInfo.fractionBits)}
+                  </Typography>
+                )}
+                {floatInfo && (
+                  <Typography variant="caption" className="mono">
+                    -1 ^ (sign) * (1 + frac(2^-n) * 2^(exp - 127)): {
+                    Math.pow(-1, floatInfo.sign) * (1 + fractionBitsToDecimal(floatInfo.fractionBits))
+                      * Math.pow(2, floatInfo.exponent - (floatInfo.kind === "float32" ? 127 : 1023))}
                   </Typography>
                 )}
               </Box>
