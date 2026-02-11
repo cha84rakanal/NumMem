@@ -244,6 +244,7 @@ export default function App() {
 
   const archLabel = ARCHS.find((a) => a.id === arch)?.label ?? arch;
   const bitsPerRow = 8;
+  const addressHexWidth = Math.max(2, Math.ceil(effectiveBitWidth / 4));
   // numeric base outputs are currently displayed per-byte; keep these when global conversion panel returns
   const rows = useMemo(() => {
     if (orderedBytes.length === 0) return [null];
@@ -343,7 +344,7 @@ export default function App() {
                   return (
                     <Box key={`row-${rowIndex}`} className="byte-line">
                       <Typography variant="caption" className="row-label">
-                        8bitの{String(rowIndex + 1).padStart(2, "0")}
+                        {`0x${rowIndex.toString(16).toUpperCase().padStart(addressHexWidth, "0")}`}
                       </Typography>
                       <Box className="byte-row-horizontal">
                         {bits.map((bit, bitIndex) => (
