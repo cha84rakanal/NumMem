@@ -268,62 +268,6 @@ export default function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box className="app-shell">
-        <Box className="top-bar">
-          <FormControl size="small" className="select-control">
-            <InputLabel id="arch-label">Architecture</InputLabel>
-            <Select
-              labelId="arch-label"
-              value={arch}
-              label="Architecture"
-              onChange={(e) => setArch(e.target.value)}
-            >
-              {ARCHS.map((item) => (
-                <MenuItem key={item.id} value={item.id}>
-                  {item.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl size="small" className="select-control">
-            <InputLabel id="width-label">Bit Width</InputLabel>
-            <Select
-              labelId="width-label"
-              value={bitWidth}
-              label="Bit Width"
-              onChange={(e) => setBitWidth(Number(e.target.value) as (typeof BIT_WIDTHS)[number])}
-            >
-              {BIT_WIDTHS.map((width) => (
-                <MenuItem key={width} value={width}>
-                  {width}-bit
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl size="small" className="select-control">
-            <InputLabel id="lang-label">Language</InputLabel>
-            <Select
-              labelId="lang-label"
-              value={lang}
-              label="Language"
-              onChange={(e) => setLang(e.target.value as Lang)}
-            >
-              {LANGS.map((item) => (
-                <MenuItem key={item.id} value={item.id}>
-                  {item.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <TextField
-            size="small"
-            value={baseAddrInput}
-            onChange={(e) => setBaseAddrInput(e.target.value)}
-            label="Base Address"
-            placeholder="0x00"
-            className="select-control"
-          />
-        </Box>
-
         <Box className="content">
           <Box className="center-panel">
             <Typography variant="h2" className="title">
@@ -351,6 +295,61 @@ export default function App() {
                 variant={parsed ? "filled" : "outlined"}
               />
             </Stack>
+            <Box className="top-bar">
+              <FormControl size="small" className="select-control">
+                <InputLabel id="arch-label">Architecture</InputLabel>
+                <Select
+                  labelId="arch-label"
+                  value={arch}
+                  label="Architecture"
+                  onChange={(e) => setArch(e.target.value)}
+                >
+                  {ARCHS.map((item) => (
+                    <MenuItem key={item.id} value={item.id}>
+                      {item.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl size="small" className="select-control">
+                <InputLabel id="width-label">Bit Width</InputLabel>
+                <Select
+                  labelId="width-label"
+                  value={bitWidth}
+                  label="Bit Width"
+                  onChange={(e) => setBitWidth(Number(e.target.value) as (typeof BIT_WIDTHS)[number])}
+                >
+                  {BIT_WIDTHS.map((width) => (
+                    <MenuItem key={width} value={width}>
+                      {width}-bit
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <TextField
+                size="small"
+                value={baseAddrInput}
+                onChange={(e) => setBaseAddrInput(e.target.value)}
+                label="Base Address"
+                placeholder="0x00"
+                className="select-control"
+              />
+              <FormControl size="small" className="select-control">
+                <InputLabel id="lang-label">Language</InputLabel>
+                <Select
+                  labelId="lang-label"
+                  value={lang}
+                  label="Language"
+                  onChange={(e) => setLang(e.target.value as Lang)}
+                >
+                  {LANGS.map((item) => (
+                    <MenuItem key={item.id} value={item.id}>
+                      {item.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
 
             <Box className="memory-panel">
               <Typography variant="h6">Memory ({effectiveBitWidth}-bit)</Typography>
