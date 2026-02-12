@@ -34,10 +34,22 @@ body {
 }
 
 .select-control {
-  min-width: 160px;
+  width: 200px;
+  min-width: 200px;
+  max-width: 200px;
+  padding: 2px 0;
   backdrop-filter: blur(12px);
   background: rgba(22, 27, 34, 0.85);
   border-radius: 14px;
+  overflow: visible;
+}
+
+.select-control .MuiInputLabel-root {
+  transform: translate(14px, 8px) scale(1);
+}
+
+.select-control .MuiInputLabel-root.MuiInputLabel-shrink {
+  transform: translate(14px, -6px) scale(0.75);
 }
 
 .content {

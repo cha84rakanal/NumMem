@@ -39,6 +39,10 @@ const ARCHS = [
   { id: "x86-64", label: "x86-64", endian: "Little" },
   { id: "arm64", label: "Arm64", endian: "Little" },
   { id: "arm32", label: "Arm32", endian: "Little" },
+  { id: "riscv", label: "RISC-V", endian: "Little" },
+  { id: "mips", label: "MIPS", endian: "Big" },
+  { id: "powerpc", label: "PowerPC", endian: "Big" },
+  { id: "generic-be", label: "Generic (Big Endian)", endian: "Big" },
 ];
 
 type Lang = "c" | "python" | "javascript";
@@ -187,6 +191,7 @@ export default function App() {
   const [lang, setLang] = useState<Lang>("c");
   const [input, setInput] = useState("42");
   const [bitWidth, setBitWidth] = useState<(typeof BIT_WIDTHS)[number]>(8);
+  const [baseAddrInput, setBaseAddrInput] = useState("0x00");
 
   const parsed = useMemo(() => parseLiteral(input, lang), [input, lang]);
   const parsedFloat = useMemo(() => detectFloat(input), [input]);
@@ -240,6 +245,19 @@ export default function App() {
 
   const archLabel = ARCHS.find((a) => a.id === arch)?.label ?? arch;
   const bitsPerRow = 8;
+  const addressHexWidth = Math.max(2, Math.ceil(effectiveBitWidth / 4));
+  const baseAddress = useMemo(() => {
+    const raw = baseAddrInput.trim();
+    if (!raw) return 0n;
+    const normalizedRaw = raw.toLowerCase();
+    try {
+      if (normalizedRaw.startsWith("0x")) return BigInt(normalizedRaw);
+      if (/^[0-9]+$/.test(normalizedRaw)) return BigInt(normalizedRaw);
+    } catch {
+      return 0n;
+    }
+    return 0n;
+  }, [baseAddrInput]);
   // numeric base outputs are currently displayed per-byte; keep these when global conversion panel returns
   const rows = useMemo(() => {
     if (orderedBytes.length === 0) return [null];
@@ -250,54 +268,6 @@ export default function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box className="app-shell">
-        <Box className="top-bar">
-          <FormControl size="small" className="select-control">
-            <InputLabel id="arch-label">Architecture</InputLabel>
-            <Select
-              labelId="arch-label"
-              value={arch}
-              label="Architecture"
-              onChange={(e) => setArch(e.target.value)}
-            >
-              {ARCHS.map((item) => (
-                <MenuItem key={item.id} value={item.id}>
-                  {item.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl size="small" className="select-control">
-            <InputLabel id="width-label">Bit Width</InputLabel>
-            <Select
-              labelId="width-label"
-              value={bitWidth}
-              label="Bit Width"
-              onChange={(e) => setBitWidth(Number(e.target.value) as (typeof BIT_WIDTHS)[number])}
-            >
-              {BIT_WIDTHS.map((width) => (
-                <MenuItem key={width} value={width}>
-                  {width}-bit
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl size="small" className="select-control">
-            <InputLabel id="lang-label">Language</InputLabel>
-            <Select
-              labelId="lang-label"
-              value={lang}
-              label="Language"
-              onChange={(e) => setLang(e.target.value as Lang)}
-            >
-              {LANGS.map((item) => (
-                <MenuItem key={item.id} value={item.id}>
-                  {item.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Box>
-
         <Box className="content">
           <Box className="center-panel">
             <Typography variant="h2" className="title">
@@ -325,6 +295,61 @@ export default function App() {
                 variant={parsed ? "filled" : "outlined"}
               />
             </Stack>
+            <Box className="top-bar">
+              <FormControl size="small" className="select-control">
+                <InputLabel id="arch-label">Architecture</InputLabel>
+                <Select
+                  labelId="arch-label"
+                  value={arch}
+                  label="Architecture"
+                  onChange={(e) => setArch(e.target.value)}
+                >
+                  {ARCHS.map((item) => (
+                    <MenuItem key={item.id} value={item.id}>
+                      {item.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl size="small" className="select-control">
+                <InputLabel id="width-label">Bit Width</InputLabel>
+                <Select
+                  labelId="width-label"
+                  value={bitWidth}
+                  label="Bit Width"
+                  onChange={(e) => setBitWidth(Number(e.target.value) as (typeof BIT_WIDTHS)[number])}
+                >
+                  {BIT_WIDTHS.map((width) => (
+                    <MenuItem key={width} value={width}>
+                      {width}-bit
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <TextField
+                size="small"
+                value={baseAddrInput}
+                onChange={(e) => setBaseAddrInput(e.target.value)}
+                label="Base Address"
+                placeholder="0x00"
+                className="select-control"
+              />
+              <FormControl size="small" className="select-control">
+                <InputLabel id="lang-label">Language</InputLabel>
+                <Select
+                  labelId="lang-label"
+                  value={lang}
+                  label="Language"
+                  onChange={(e) => setLang(e.target.value as Lang)}
+                >
+                  {LANGS.map((item) => (
+                    <MenuItem key={item.id} value={item.id}>
+                      {item.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
 
             <Box className="memory-panel">
               <Typography variant="h6">Memory ({effectiveBitWidth}-bit)</Typography>
@@ -339,7 +364,10 @@ export default function App() {
                   return (
                     <Box key={`row-${rowIndex}`} className="byte-line">
                       <Typography variant="caption" className="row-label">
-                        8bitの{String(rowIndex + 1).padStart(2, "0")}
+                        {`0x${(baseAddress + BigInt(rowIndex))
+                          .toString(16)
+                          .toUpperCase()
+                          .padStart(addressHexWidth, "0")}`}
                       </Typography>
                       <Box className="byte-row-horizontal">
                         {bits.map((bit, bitIndex) => (
