@@ -212,9 +212,9 @@ body {
   border-radius: 18px;
   background: rgba(22, 27, 34, 0.9);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+  width: min(720px, 95vw);
   display: grid;
   gap: 10px;
-  width: min(900px, 95vw);
 }
 
 .ieee-card {
