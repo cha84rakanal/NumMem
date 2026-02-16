@@ -110,7 +110,7 @@ function parseLiteral(inputRaw: string, lang: Lang): { value: bigint; base: numb
 
 type FloatParse = { value: number; kind: "float32" | "float64" };
 
-function detectFloat(inputRaw: string): FloatParse | null {
+function detectFloat(inputRaw: string, lang: Lang): FloatParse | null {
   const trimmed = inputRaw.trim();
   if (!trimmed) return null;
   const lower = trimmed.toLowerCase();
@@ -121,6 +121,14 @@ function detectFloat(inputRaw: string): FloatParse | null {
   const hasFloatSuffix = lower.endsWith("f");
   const core = hasFloatSuffix ? trimmed.slice(0, -1) : trimmed;
   if (!core) return null;
+  if (lang === "javascript") {
+    const num = Number(core);
+    if (Number.isNaN(num)) return null;
+    return {
+      value: num,
+      kind: "float64",
+    };
+  }
   const isFloatLike = core.includes(".") || core.includes("e") || core.includes("E");
   if (!isFloatLike && !hasFloatSuffix) return null;
   const num = Number(core);
@@ -194,7 +202,7 @@ export default function App() {
   const [baseAddrInput, setBaseAddrInput] = useState("0x00");
 
   const parsed = useMemo(() => parseLiteral(input, lang), [input, lang]);
-  const parsedFloat = useMemo(() => detectFloat(input), [input]);
+  const parsedFloat = useMemo(() => detectFloat(input, lang), [input, lang]);
   const floatInfo = useMemo(() => {
     if (!parsedFloat) return null;
     if (parsedFloat.kind === "float32") return { kind: "float32" as const, ...float32Bits(parsedFloat.value) };
