@@ -49,7 +49,6 @@ type Lang = "c" | "python" | "javascript";
 
 const LANGS: { id: Lang; label: string }[] = [
   { id: "c", label: "C" },
-  { id: "python", label: "Python" },
   { id: "javascript", label: "JavaScript" },
 ];
 
@@ -85,7 +84,7 @@ function parseLiteral(inputRaw: string, lang: Lang): { value: bigint; base: numb
     return { value: sign * BigInt(unsigned.replace(/_/g, "")), base: 10 };
   }
 
-  if (lang === "python" || lang === "javascript") {
+  if (lang === "javascript") {
     if (unsigned.startsWith("0x") || unsigned.startsWith("0X")) {
       const digits = unsigned.slice(2);
       if (!/^[0-9a-fA-F_]+$/.test(digits)) return null;
