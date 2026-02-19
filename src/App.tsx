@@ -1,18 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Box,
-  Chip,
-  CssBaseline,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  Stack,
-  TextField,
-  ThemeProvider,
-  Typography,
-  createTheme,
-} from "@mui/material";
+import { Box, CssBaseline, GlobalStyles, ThemeProvider, createTheme } from "@mui/material";
+import { styled } from "@mui/material/styles";
+import { Controls } from "./components/Controls";
+import { Header } from "./components/Header";
+import { IeeePanel } from "./components/IeeePanel";
+import { InputSection } from "./components/InputSection";
+import { MemoryPanel } from "./components/MemoryPanel";
 
 const theme = createTheme({
   palette: {
@@ -34,6 +27,44 @@ const theme = createTheme({
   },
   shape: { borderRadius: 16 },
 });
+
+const AppShell = styled(Box)(({ theme }) => ({
+  minHeight: "100vh",
+  padding: "32px 48px 56px",
+  background:
+    "radial-gradient(900px 480px at 15% -10%, rgba(88, 166, 255, 0.18), transparent 65%), radial-gradient(700px 420px at 90% 0%, rgba(247, 120, 186, 0.12), transparent 70%), linear-gradient(180deg, rgba(13, 17, 23, 0.96), rgba(13, 17, 23, 1))",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  gap: 24,
+  [theme.breakpoints.down("md")]: {
+    padding: 24,
+  },
+}));
+
+const Content = styled(Box)(() => ({
+  alignItems: "start",
+  width: "100%",
+  maxWidth: 1200,
+}));
+
+const CenterPanel = styled(Box)(() => ({
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  gap: 16,
+}));
+
+const TopBar = styled(Box)(({ theme }) => ({
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: 16,
+  [theme.breakpoints.down("md")]: {
+    flexDirection: "column",
+    alignItems: "stretch",
+  },
+}));
 
 const ARCHS = [
   { id: "x86-64", label: "x86-64", endian: "Little" },
@@ -62,7 +93,13 @@ function parseLiteral(inputRaw: string, lang: Lang): { value: bigint; base: numb
   const unsigned = input.replace(/^[-+]/, "");
   if (!unsigned) return null;
 
-  const hasPrefix = unsigned.startsWith("0x") || unsigned.startsWith("0X") || unsigned.startsWith("0b") || unsigned.startsWith("0B") || unsigned.startsWith("0o") || unsigned.startsWith("0O");
+  const hasPrefix =
+    unsigned.startsWith("0x") ||
+    unsigned.startsWith("0X") ||
+    unsigned.startsWith("0b") ||
+    unsigned.startsWith("0B") ||
+    unsigned.startsWith("0o") ||
+    unsigned.startsWith("0O");
 
   if (lang === "c") {
     if (unsigned.startsWith("0x") || unsigned.startsWith("0X")) {
@@ -151,7 +188,9 @@ function float32Bits(value: number): { bits: string; sign: number; exponent: num
   return { bits, sign, exponent, fraction, fractionBits };
 }
 
-function float64Bits(value: number): { bits: string; sign: number; exponent: number; fraction: bigint; fractionBits: string } {
+function float64Bits(
+  value: number
+): { bits: string; sign: number; exponent: number; fraction: bigint; fractionBits: string } {
   const buffer = new ArrayBuffer(8);
   const view = new DataView(buffer);
   view.setFloat64(0, value, false);
@@ -274,182 +313,54 @@ export default function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box className="app-shell">
-        <Box className="content">
-          <Box className="center-panel">
-            <Typography variant="h2" className="title">
-              NumMemory
-            </Typography>
-            <Typography variant="subtitle1" className="subtitle">
-              8-bit memory view with literal-aware parsing
-            </Typography>
-
-            <TextField
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="例: 255, 0xff, 0b101010"
-              className="input-field"
-              InputProps={{
-                inputProps: { "aria-label": "numeric input" },
-              }}
+      <GlobalStyles
+        styles={{
+          ":root": { colorScheme: "dark" },
+          "*": { boxSizing: "border-box" },
+          body: { margin: 0, background: "#0d1117", color: "#c9d1d9" },
+        }}
+      />
+      <AppShell>
+        <Content>
+          <CenterPanel>
+            <Header />
+            <InputSection
+              input={input}
+              onInputChange={setInput}
+              archLabel={archLabel}
+              endian={endian}
+              isValid={Boolean(parsed)}
+              parsedBase={parsed ? parsed.base : null}
             />
-
-            <Stack direction="row" spacing={1} className="chips">
-              <Chip label={`${archLabel} / ${endian} Endian`} color="primary" variant="outlined" />
-              <Chip
-                label={parsed ? `Detected: base ${parsed.base}` : "Invalid literal"}
-                color={parsed ? "secondary" : "default"}
-                variant={parsed ? "filled" : "outlined"}
+            <TopBar>
+              <Controls
+                arch={arch}
+                onArchChange={setArch}
+                bitWidth={bitWidth}
+                onBitWidthChange={(value) => setBitWidth(value as (typeof BIT_WIDTHS)[number])}
+                baseAddrInput={baseAddrInput}
+                onBaseAddrInputChange={setBaseAddrInput}
+                lang={lang}
+                onLangChange={(value) => setLang(value as Lang)}
+                archs={ARCHS}
+                bitWidths={BIT_WIDTHS}
+                langs={LANGS}
               />
-            </Stack>
-            <Box className="top-bar">
-              <FormControl size="small" className="select-control">
-                <InputLabel id="arch-label">Architecture</InputLabel>
-                <Select
-                  labelId="arch-label"
-                  value={arch}
-                  label="Architecture"
-                  onChange={(e) => setArch(e.target.value)}
-                >
-                  {ARCHS.map((item) => (
-                    <MenuItem key={item.id} value={item.id}>
-                      {item.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl size="small" className="select-control">
-                <InputLabel id="width-label">Bit Width</InputLabel>
-                <Select
-                  labelId="width-label"
-                  value={bitWidth}
-                  label="Bit Width"
-                  onChange={(e) => setBitWidth(Number(e.target.value) as (typeof BIT_WIDTHS)[number])}
-                >
-                  {BIT_WIDTHS.map((width) => (
-                    <MenuItem key={width} value={width}>
-                      {width}-bit
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <TextField
-                size="small"
-                value={baseAddrInput}
-                onChange={(e) => setBaseAddrInput(e.target.value)}
-                label="Base Address"
-                placeholder="0x00"
-                className="select-control"
-              />
-              <FormControl size="small" className="select-control">
-                <InputLabel id="lang-label">Language</InputLabel>
-                <Select
-                  labelId="lang-label"
-                  value={lang}
-                  label="Language"
-                  onChange={(e) => setLang(e.target.value as Lang)}
-                >
-                  {LANGS.map((item) => (
-                    <MenuItem key={item.id} value={item.id}>
-                      {item.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
-
-            <Box className="memory-panel">
-              <Typography variant="h6">Memory ({effectiveBitWidth}-bit)</Typography>
-              <Box className="row-stack">
-                {rows.map((rowByte, rowIndex) => {
-                  const byte = rowByte;
-                  const bits = byte === null ? Array.from({ length: bitsPerRow }, () => "-") : toBits(byte, bitsPerRow);
-                  const hex = byte === null ? "--" : byte.toString(16).toUpperCase().padStart(2, "0");
-                  const bin = byte === null ? "--------" : byte.toString(2).padStart(8, "0");
-                  const ascii = byte === null ? "·" : toPrintableAscii(byte);
-                  const dec = byte === null ? "-" : String(byte);
-                  return (
-                    <Box key={`row-${rowIndex}`} className="byte-line">
-                      <Typography variant="caption" className="row-label">
-                        {`0x${(baseAddress + BigInt(rowIndex))
-                          .toString(16)
-                          .toUpperCase()
-                          .padStart(addressHexWidth, "0")}`}
-                      </Typography>
-                      <Box className="byte-row-horizontal">
-                        {bits.map((bit, bitIndex) => (
-                          <Box
-                            key={`cell-${rowIndex}-${bitIndex}`}
-                            className={`bit-cell ${bit === "1" ? "on" : "off"}`}
-                          >
-                            <Typography variant="caption">{bit}</Typography>
-                          </Box>
-                        ))}
-                      </Box>
-                      <Box className="row-conversions compact">
-                        <Box className="row-conversion">
-                          <Typography variant="caption" className="mono">
-                            Hex: {hex}
-                          </Typography>
-                        </Box>
-                        <Box className="row-conversion">
-                          <Typography variant="caption" className="mono">
-                            Dec: {dec}
-                          </Typography>
-                        </Box>
-                        <Box className="row-conversion">
-                          <Typography variant="caption" className="mono">
-                            Bin: {bin}
-                          </Typography>
-                        </Box>
-                        <Box className="row-conversion">
-                          <Typography variant="caption" className="mono">
-                            ASCII: {ascii}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </Box>
-                  );
-                })}
-              </Box>
-              <Typography variant="caption" className="bit-caption">
-                Byte order: {endian} Endian | Bits: MSB → LSB
-              </Typography>
-            </Box>
-            <Box className="ieee-panel">
-              <Typography variant="h6">IEEE754</Typography>
-              <Typography variant="caption" className="note">
-                入力が `.` / `e` / `f` を含むと浮動小数として推論されます
-              </Typography>
-              <Box className="ieee-card">
-                <Typography variant="caption" className="mono">
-                  {floatInfo ? `${floatInfo.kind} = ${parsedFloat?.value}` : "-"}
-                </Typography>
-                <Typography variant="caption" className="mono">
-                  {floatInfo ? floatInfo.bits : "-"}
-                </Typography>
-                {floatInfo && (
-                  <Typography variant="caption" className="mono">
-                    sign: {floatInfo.sign} exp: {floatInfo.exponent} frac: {floatInfo.fraction.toString()}
-                  </Typography>
-                )}
-                {floatInfo && (
-                  <Typography variant="caption" className="mono">
-                    frac(2^-n): {fractionBitsToDecimal(floatInfo.fractionBits)}
-                  </Typography>
-                )}
-                {floatInfo && (
-                  <Typography variant="caption" className="mono">
-                    -1 ^ (sign) * (1 + frac(2^-n) * 2^(exp - 127)): {
-                    Math.pow(-1, floatInfo.sign) * (1 + fractionBitsToDecimal(floatInfo.fractionBits))
-                      * Math.pow(2, floatInfo.exponent - (floatInfo.kind === "float32" ? 127 : 1023))}
-                  </Typography>
-                )}
-              </Box>
-            </Box>
-          </Box>
-        </Box>
-      </Box>
+            </TopBar>
+            <MemoryPanel
+              effectiveBitWidth={effectiveBitWidth}
+              rows={rows}
+              bitsPerRow={bitsPerRow}
+              baseAddress={baseAddress}
+              addressHexWidth={addressHexWidth}
+              endian={endian}
+              toBits={toBits}
+              toPrintableAscii={toPrintableAscii}
+            />
+            <IeeePanel floatInfo={floatInfo} parsedFloat={parsedFloat} fractionBitsToDecimal={fractionBitsToDecimal} />
+          </CenterPanel>
+        </Content>
+      </AppShell>
     </ThemeProvider>
   );
 }
