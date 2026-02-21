@@ -9,6 +9,28 @@ import {
   toUintN,
 } from "./numberLogic";
 
+const SAMPLE_OPTIONS = [
+  "1",
+  "2",
+  "3",
+  "123456",
+  "9007199254740992",
+  "0.1",
+  "0.2",
+  "0.3",
+  "0.5",
+  "123.456",
+  "+0",
+  "-0",
+  "Infinity",
+  "-Infinity",
+  "Number.MAX_SAFE_INTEGER",
+  "Number.MIN_SAFE_INTEGER",
+  "Number.MAX_VALUE",
+  "Number.MIN_VALUE",
+  "NaN",
+];
+
 describe("parseLiteral", () => {
   it("parses C-style hex", () => {
     const parsed = parseLiteral("0x2A", "c");
@@ -32,6 +54,33 @@ describe("parseLiteral", () => {
     const parsed = parseLiteral("0b1201", "javascript");
     expect(parsed).toBeNull();
   });
+
+  it("parses integer samples", () => {
+    const integerOptions = SAMPLE_OPTIONS.filter(
+      (option) => option === "+0" || option === "-0" || /^[0-9]+$/.test(option)
+    );
+
+    for (const option of integerOptions) {
+      const expected = BigInt(option);
+      const parsedC = parseLiteral(option, "c");
+      const parsedJs = parseLiteral(option, "javascript");
+      expect(parsedC?.value).toBe(expected);
+      expect(parsedC?.base).toBe(10);
+      expect(parsedJs?.value).toBe(expected);
+      expect(parsedJs?.base).toBe(10);
+    }
+  });
+
+  it("rejects non-literal samples", () => {
+    const invalidOptions = SAMPLE_OPTIONS.filter(
+      (option) => option === "NaN" || option.startsWith("Number.")
+    );
+
+    for (const option of invalidOptions) {
+      expect(parseLiteral(option, "c")).toBeNull();
+      expect(parseLiteral(option, "javascript")).toBeNull();
+    }
+  });
 });
 
 describe("detectFloat", () => {
@@ -50,6 +99,46 @@ describe("detectFloat", () => {
   it("skips hex literals", () => {
     const parsed = detectFloat("0x10", "c");
     expect(parsed).toBeNull();
+  });
+
+  it("detects decimal samples", () => {
+    const decimalOptions = SAMPLE_OPTIONS.filter(
+      (option) => option.includes(".") && !option.startsWith("Number.")
+    );
+
+    for (const option of decimalOptions) {
+      const expected = Number(option);
+      const parsedC = detectFloat(option, "c");
+      const parsedJs = detectFloat(option, "javascript");
+      expect(parsedC?.kind).toBe("float64");
+      expect(parsedC?.value).toBeCloseTo(expected);
+      expect(parsedJs?.kind).toBe("float64");
+      expect(parsedJs?.value).toBeCloseTo(expected);
+    }
+  });
+
+  it("handles Infinity samples in javascript only", () => {
+    const infinityOptions = SAMPLE_OPTIONS.filter((option) => option === "Infinity" || option === "-Infinity");
+
+    for (const option of infinityOptions) {
+      const expected = Number(option);
+      const parsedC = detectFloat(option, "c");
+      const parsedJs = detectFloat(option, "javascript");
+      expect(parsedC).toBeNull();
+      expect(parsedJs?.kind).toBe("float64");
+      expect(parsedJs?.value).toBe(expected);
+    }
+  });
+
+  it("rejects non-numeric samples", () => {
+    const invalidOptions = SAMPLE_OPTIONS.filter(
+      (option) => option === "NaN" || option.startsWith("Number.")
+    );
+
+    for (const option of invalidOptions) {
+      expect(detectFloat(option, "c")).toBeNull();
+      expect(detectFloat(option, "javascript")).toBeNull();
+    }
   });
 });
 
